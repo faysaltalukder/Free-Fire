@@ -527,6 +527,9 @@
   }
 
   function draw() {
+    if (window.FreeFire3D && window.FreeFire3D.render({
+      player, bots, obstacles, pickups, bullets, safeZone, state, dropActors, plane, elapsed, view
+    })) return;
     ctx.clearRect(0, 0, view.width, view.height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
