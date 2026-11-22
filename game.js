@@ -92,7 +92,7 @@
     }
     safeZone = { x: WORLD.width / 2 + random(-90, 90), y: WORLD.height / 2 + random(-70, 70), startRadius: 900, radius: 900, minRadius: 175, shrinkDelay: 12, shrinkDuration: 190 };
     keys = {};
-    mouse = { x: view.width / 2 + 100, y: view.height / 2, down: false, active: false, moveTarget: null };
+    mouse = { x: view.width / 2 + 100, y: view.height / 2, screenX: view.width / 2 + 100, screenY: view.height / 2, down: false, active: false, moveTarget: null };
     joystick = { active: false, x: 0, y: 0, pointerId: null };
     dropActors = [{ fighter: player, startX: 0, startY: 350, landingX: player.x, landingY: player.y, delay: 0, progress: 0, jumped: false }];
     bots.forEach((bot, i) => {
@@ -429,7 +429,12 @@
     if (ml > .05) moveFighter(player, mx * player.speed * dt, my * player.speed * dt);
     if (isTouchDevice() && !fireTouch.active && ml > .15) player.angle = Math.atan2(my, mx);
 
-    if (mouse.active && !isTouchDevice()) player.angle = angleTo(player, { x: mouse.x, y: mouse.y });
+    if (mouse.active && !isTouchDevice()) {
+      const aimPoint = window.FreeFire3D && window.FreeFire3D.screenToWorld
+        ? window.FreeFire3D.screenToWorld(mouse.screenX, mouse.screenY) : null;
+      if (aimPoint) { mouse.x = aimPoint.x; mouse.y = aimPoint.y; }
+      player.angle = angleTo(player, { x: mouse.x, y: mouse.y });
+    }
     if (mouse.down || fireTouch.active) playerShoot();
 
     if (elapsed > safeZone.shrinkDelay) {
