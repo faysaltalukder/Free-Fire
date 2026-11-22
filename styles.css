@@ -49,7 +49,10 @@ button { font: inherit; }
 .action-btn span { display: inline-grid; min-width: 17px; height: 17px; margin-left: 5px; place-items: center; border-radius: 50%; color: #142016; background: var(--lime); }
 kbd { margin-left: 6px; color: var(--lime); font: inherit; }
 .overlay { position: absolute; z-index: 5; inset: 0; display: grid; place-items: center; padding: 22px; background: rgba(8,14,11,.63); backdrop-filter: blur(7px); }
-.hidden { display: none; }
+.hidden { display: none !important; }
+.jump-btn { position: absolute; z-index: 4; left: 50%; bottom: 22%; transform: translateX(-50%); min-width: 150px; min-height: 54px; padding: 0 24px; border: 2px solid rgba(255,255,255,.65); color: #172016; background: var(--lime); box-shadow: 0 8px 30px rgba(0,0,0,.38); font-size: 15px; font-weight: 1000; letter-spacing: 2px; cursor: pointer; }
+.jump-btn span { margin-left: 12px; font-size: 19px; }
+.jump-btn:not(.hidden) { display: block; }
 .modal-card { width: min(570px, 100%); padding: clamp(25px, 5vw, 48px); border: 1px solid rgba(232,242,224,.2); background: linear-gradient(145deg, rgba(27,42,33,.98), rgba(12,21,17,.98)); box-shadow: 0 30px 100px rgba(0,0,0,.45); position: relative; }
 .modal-card:before { content: ""; position: absolute; top: -1px; left: 38px; width: 70px; height: 3px; background: var(--lime); }
 .eyebrow { display: flex; align-items: center; gap: 9px; color: var(--lime); font-size: 8px; font-weight: 900; letter-spacing: 2.3px; }
@@ -105,6 +108,7 @@ kbd { margin-left: 6px; color: var(--lime); font: inherit; }
   .joystick { width: 105px; height: 105px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; background: rgba(10,20,15,.24); touch-action: none; }
   .stick-knob { width: 42px; height: 42px; border: 1px solid rgba(213,243,107,.5); border-radius: 50%; background: rgba(213,243,107,.25); }
   .fire-btn { width: 78px; height: 78px; border: 2px solid rgba(255,255,255,.55); border-radius: 50%; color: #172016; background: var(--lime); font-size: 11px; font-weight: 1000; letter-spacing: 1px; pointer-events: auto; touch-action: none; box-shadow: 0 6px 25px rgba(0,0,0,.3); }
+  .jump-btn { bottom: 28%; min-width: 138px; min-height: 50px; }
   .briefing { gap: 5px; margin: 19px 0; }
   .briefing div { padding: 8px; }
   .briefing strong { font-size: 8px; }
