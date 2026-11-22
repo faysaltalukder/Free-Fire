@@ -7,7 +7,7 @@
   const ui = {
     status: $("statusText"), health: $("healthValue"), healthFill: $("healthFill"),
     kills: $("killsValue"), alive: $("aliveValue"), zone: $("zoneValue"),
-    ammo: $("ammoValue"), reserve: $("reserveValue"), medkits: $("medkitCount"),
+    ammo: $("ammoValue"), reserve: $("reserveValue"), medkits: $("medkitCount"), glueBtn: $("glooBtn"), glueCount: $("glooCount"),
     start: $("startOverlay"), end: $("endOverlay"), startBtn: $("startBtn"),
     restartBtn: $("restartBtn"), reloadBtn: $("reloadBtn"), medkitBtn: $("medkitBtn"),
     fireBtn: $("fireBtn"), joystick: $("joystick"), knob: $("stickKnob"),
@@ -72,7 +72,7 @@
   function startGame() {
     elapsed = 0;
     player = newFighter(WORLD.width * .28, WORLD.height * .52, true);
-    player.ammo = 28; player.reserve = 84; player.medkits = 1; player.kills = 0;
+    player.ammo = 28; player.reserve = 84; player.medkits = Infinity; player.glueWalls = Infinity; player.kills = 0;
     player.reloading = 0; player.shotCooldown = 0;
     bots = [];
     for (let i = 0; i < CONFIG.botCount; i++) {
@@ -92,7 +92,7 @@
     }
     safeZone = { x: WORLD.width / 2 + random(-90, 90), y: WORLD.height / 2 + random(-70, 70), startRadius: 900, radius: 900, minRadius: 175, shrinkDelay: 12, shrinkDuration: 190 };
     keys = {};
-    mouse = { x: view.width / 2 + 100, y: view.height / 2, down: false, active: false };
+    mouse = { x: view.width / 2 + 100, y: view.height / 2, down: false, active: false, moveTarget: null };
     joystick = { active: false, x: 0, y: 0, pointerId: null };
     dropActors = [{ fighter: player, startX: 0, startY: 350, landingX: player.x, landingY: player.y, delay: 0, progress: 0, jumped: false }];
     bots.forEach((bot, i) => {
@@ -239,6 +239,10 @@
 
 
   function worldPointer(event) {
+    if (window.FreeFire3D && window.FreeFire3D.screenToWorld) {
+      const point = window.FreeFire3D.screenToWorld(event.clientX, event.clientY);
+      if (point) return point;
+    }
     const rect = canvas.getBoundingClientRect();
     return { x: event.clientX - rect.left + camera.x, y: event.clientY - rect.top + camera.y };
   }
@@ -247,6 +251,7 @@
     if (event.pointerType === "mouse") {
       const p = worldPointer(event);
       mouse.x = p.x; mouse.y = p.y; mouse.active = true;
+      if (mouse.moveTarget && (event.buttons & 2)) mouse.moveTarget = p;
     } else if (fireTouch.active && fireTouch.pointerId === event.pointerId) {
       const p = worldPointer(event);
       player && (player.angle = angleTo(player, p));
@@ -255,7 +260,14 @@
   canvas.addEventListener("pointerdown", (event) => {
     if (state !== "running") return;
     if (event.pointerType === "mouse") {
-      mouse.down = true;
+      const p = worldPointer(event);
+      mouse.x = p.x; mouse.y = p.y; mouse.active = true;
+      if (event.button === 2) {
+        mouse.moveTarget = p;
+        event.preventDefault();
+      } else if (event.button === 0) {
+        mouse.down = true;
+      }
       canvas.setPointerCapture?.(event.pointerId);
     } else if (event.clientX > view.width * .42) {
       // Touch and drag on the right side of the arena to aim and fire.
@@ -266,8 +278,9 @@
       player && (player.angle = angleTo(player, p));
     }
   });
+  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
   addEventListener("pointerup", (event) => {
-    if (event.pointerType === "mouse") mouse.down = false;
+    if (event.pointerType === "mouse" && event.button === 0) mouse.down = false;
     if (fireTouch.pointerId === event.pointerId) {
       fireTouch.active = false;
       fireTouch.pointerId = null;
@@ -320,7 +333,7 @@
     if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) event.preventDefault();
     if (key === " " && state === "dropping") jumpPlayer();
     if (key === "r" && state === "running") reload();
-    if (key === "f" && state === "running") useMedkit();
+    if (key === "f" && state === "running") useMedkit();\n    if (key === "g" && state === "running") placeGlooWall();
   });
   addEventListener("keyup", (event) => { keys[event.key.toLowerCase()] = false; });
 
@@ -328,7 +341,7 @@
   ui.startBtn.addEventListener("click", startGame);
   ui.restartBtn.addEventListener("click", startGame);
   ui.reloadBtn.addEventListener("click", reload);
-  ui.medkitBtn.addEventListener("click", useMedkit);
+  ui.medkitBtn.addEventListener("click", useMedkit);\n  ui.glueBtn.addEventListener("click", placeGlooWall);
 
   function reload() {
     if (!player || player.reloading > 0 || player.ammo >= 28 || player.reserve <= 0) return;
@@ -346,9 +359,16 @@
 
   function blocked(x, y, radius) {
     for (const o of obstacles) {
-      const cx = clamp(x, o.x - o.w / 2, o.x + o.w / 2);
-      const cy = clamp(y, o.y - o.h / 2, o.y + o.h / 2);
-      if (Math.hypot(x - cx, y - cy) < radius) return true;
+      if (o.type === "gloo") {
+        const dx = x - o.x, dy = y - o.y, a = o.angle || 0;
+        const lx = dx * Math.cos(a) + dy * Math.sin(a);
+        const ly = -dx * Math.sin(a) + dy * Math.cos(a);
+        if (Math.abs(lx) < o.w / 2 + radius && Math.abs(ly) < o.h / 2 + radius) return true;
+      } else {
+        const cx = clamp(x, o.x - o.w / 2, o.x + o.w / 2);
+        const cy = clamp(y, o.y - o.h / 2, o.y + o.h / 2);
+        if (Math.hypot(x - cx, y - cy) < radius) return true;
+      }
     }
     return false;
   }
@@ -396,6 +416,12 @@
     let mx = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0);
     let my = (keys.s || keys.arrowdown ? 1 : 0) - (keys.w || keys.arrowup ? 1 : 0);
     mx += joystick.x; my += joystick.y;
+    if (mouse.moveTarget && !isTouchDevice()) {
+      const dx = mouse.moveTarget.x - player.x, dy = mouse.moveTarget.y - player.y;
+      const distanceToTarget = Math.hypot(dx, dy);
+      if (distanceToTarget < 20) mouse.moveTarget = null;
+      else { mx += dx / distanceToTarget; my += dy / distanceToTarget; }
+    }
     const ml = Math.hypot(mx, my);
     if (ml > 1) { mx /= ml; my /= ml; }
     if (ml > .05) moveFighter(player, mx * player.speed * dt, my * player.speed * dt);
@@ -528,7 +554,7 @@
     ui.alive.textContent = String(bots.filter((b) => b.alive).length + (player.alive ? 1 : 0));
     ui.ammo.textContent = String(player.ammo).padStart(2, "0");
     ui.reserve.textContent = player.reserve;
-    ui.medkits.textContent = player.medkits;
+    ui.medkits.textContent = "∞";\n    if (ui.glueCount) ui.glueCount.textContent = "∞";
     ui.zone.textContent = elapsed < safeZone.shrinkDelay ? "STABLE" : Math.ceil(safeZone.radius) + "M";
   }
 
