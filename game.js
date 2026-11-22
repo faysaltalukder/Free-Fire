@@ -542,6 +542,14 @@
     if (state === "running") requestAnimationFrame(loop);
   }
 
+  // Optional offline shell caching for the deployed GitHub Pages app.
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js", { scope: "./" })
+        .catch((error) => console.warn("Offline support could not be enabled:", error));
+    }, { once: true });
+  }
+
   // Draw an idle arena behind the start screen.
   obstacles = makeObstacles();
   player = newFighter(WORLD.width / 2, WORLD.height / 2, true);
