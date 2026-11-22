@@ -333,7 +333,8 @@
     if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) event.preventDefault();
     if (key === " " && state === "dropping") jumpPlayer();
     if (key === "r" && state === "running") reload();
-    if (key === "f" && state === "running") useMedkit();\n    if (key === "g" && state === "running") placeGlooWall();
+    if (key === "f" && state === "running") useMedkit();
+    if (key === "g" && state === "running") placeGlooWall();
   });
   addEventListener("keyup", (event) => { keys[event.key.toLowerCase()] = false; });
 
@@ -341,7 +342,8 @@
   ui.startBtn.addEventListener("click", startGame);
   ui.restartBtn.addEventListener("click", startGame);
   ui.reloadBtn.addEventListener("click", reload);
-  ui.medkitBtn.addEventListener("click", useMedkit);\n  ui.glueBtn.addEventListener("click", placeGlooWall);
+  ui.medkitBtn.addEventListener("click", useMedkit);
+  ui.glueBtn.addEventListener("click", placeGlooWall);
 
   function reload() {
     if (!player || player.reloading > 0 || player.ammo >= 28 || player.reserve <= 0) return;
@@ -554,7 +556,8 @@
     ui.alive.textContent = String(bots.filter((b) => b.alive).length + (player.alive ? 1 : 0));
     ui.ammo.textContent = String(player.ammo).padStart(2, "0");
     ui.reserve.textContent = player.reserve;
-    ui.medkits.textContent = "∞";\n    if (ui.glueCount) ui.glueCount.textContent = "∞";
+    ui.medkits.textContent = "∞";
+    if (ui.glueCount) ui.glueCount.textContent = "∞";
     ui.zone.textContent = elapsed < safeZone.shrinkDelay ? "STABLE" : Math.ceil(safeZone.radius) + "M";
   }
 
