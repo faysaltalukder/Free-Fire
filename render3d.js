@@ -90,11 +90,36 @@
   }
   function buildPlane() {
     planeGroup=new THREE.Group(); scene.add(planeGroup);
-    addMesh(planeGroup,new THREE.CylinderGeometry(5,7,72,12),materials.plane,0,0,0).rotation.z=Math.PI/2;
-    addMesh(planeGroup,new THREE.BoxGeometry(14,1.5,125),materials.plane,0,0,0);
-    addMesh(planeGroup,new THREE.BoxGeometry(12,1.2,35),materials.plane,-31,0,0);
-    addMesh(planeGroup,new THREE.BoxGeometry(10,1.2,25),materials.plane,31,0,0);
-    addMesh(planeGroup,new THREE.SphereGeometry(5,12,8),mat("#253c48"),37,0,0);
+    const fuselage=addMesh(planeGroup,new THREE.CylinderGeometry(7,9,104,16),materials.plane,0,0,0);
+    fuselage.rotation.z=Math.PI/2;
+    fuselage.scale.set(1,1,1);
+    const nose=addMesh(planeGroup,new THREE.ConeGeometry(7,22,16),materials.plane,62,0,0);
+    nose.rotation.z=-Math.PI/2;
+    const tailCone=addMesh(planeGroup,new THREE.ConeGeometry(6,19,12),materials.plane,-61,0,0);
+    tailCone.rotation.z=Math.PI/2;
+    addMesh(planeGroup,new THREE.BoxGeometry(31,2.2,166),materials.plane,-2,0,0);
+    addMesh(planeGroup,new THREE.BoxGeometry(28,2,58),materials.plane,-48,1,0);
+    addMesh(planeGroup,new THREE.BoxGeometry(17,2,42),materials.plane,-45,11,0);
+    addMesh(planeGroup,new THREE.BoxGeometry(18,2,16),mat("#536a70"),-14,7,0);
+    addMesh(planeGroup,new THREE.BoxGeometry(3,14,17),mat("#263d47"),-20,-1,-8);
+    addMesh(planeGroup,new THREE.BoxGeometry(3,14,17),mat("#263d47"),-20,-1,8);
+    // Four engine nacelles and animated propellers make the aircraft read clearly in flight.
+    const props=[];
+    for(const z of [-53,53]){
+      const engine=addMesh(planeGroup,new THREE.CylinderGeometry(6,6,28,14),mat("#89999a",.55,.2),8,-4,z);
+      engine.rotation.z=Math.PI/2;
+      const prop=new THREE.Group(); prop.position.set(23,-4,z); planeGroup.add(prop);
+      const bladeA=addMesh(prop,new THREE.BoxGeometry(2,29,4),mat("#26343a"),0,0,0,false);
+      const bladeB=addMesh(prop,new THREE.BoxGeometry(2,29,4),mat("#26343a"),0,0,0,false);
+      bladeB.rotation.x=Math.PI/2;
+      props.push(prop);
+    }
+    // Cockpit glazing and a clearly visible side cargo door.
+    const glass=addMesh(planeGroup,new THREE.SphereGeometry(7,16,10),mat("#355b69",.25,.25),42,3,0,false);
+    glass.scale.set(1.35,.72,1.15);
+    addMesh(planeGroup,new THREE.BoxGeometry(2,19,20),mat("#263b43"),-19,-2,-10,false);
+    addMesh(planeGroup,new THREE.BoxGeometry(2,13,17),mat("#d5f36b"),-19,-2,-10,false).material=mat("#d5f36b");
+    planeGroup.userData.propellers=props;
   }
   function makeHuman(f) {
     const root=new THREE.Group();
@@ -180,7 +205,11 @@
     zoneRing.rotation.x=Math.PI/2;zoneRing.position.set(safeZone.x,.5,safeZone.y);scene.add(zoneRing);
     // Transport aircraft and visible parachutists are actual 3D meshes.
     planeGroup.visible=state==="dropping"&&!!plane;
-    if(planeGroup.visible) planeGroup.position.set(plane.x,115,plane.y);
+    if(planeGroup.visible) {
+      planeGroup.position.set(plane.x,115,plane.y);
+      planeGroup.rotation.y=0;
+      (planeGroup.userData.propellers||[]).forEach((prop,i)=>{prop.rotation.x=elapsed*34*(i===0?1:-1);});
+    }
     if(state==="dropping"){
       dropActors.forEach(a=>{
         if(!a.jumped||a.progress>=1) return;
@@ -198,7 +227,7 @@
           }
           a._3d=pack;
         }
-        pack.visible=true;pack.position.set(x,110*(1-t)+8,z);
+        pack.visible=true;pack.position.set(x,132*(1-t)+8,z);
         pack.children[0].rotation.y=Math.PI/2-a.fighter.angle;
       });
       dropActors.forEach(a=>{if(a._3d&&(!a.jumped||a.progress>=1))a._3d.visible=false;});
