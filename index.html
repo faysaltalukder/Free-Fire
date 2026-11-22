@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#101916">
+  <meta name="description" content="An original browser-based battle royale survival shooter prototype.">
+  <title>Free Fire — Survival Arena Prototype</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <main class="game-shell">
+    <canvas id="gameCanvas" aria-label="Battle royale game arena"></canvas>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">FF</div>
+        <div>
+          <div class="brand-name">FREE FIRE <span>LAB</span></div>
+          <div class="brand-sub">SURVIVAL ARENA · PROTOTYPE</div>
+        </div>
+      </div>
+      <div class="top-status">
+        <span class="live-dot"></span>
+        <span id="statusText">READY TO DEPLOY</span>
+      </div>
+    </header>
+
+    <section class="hud" aria-live="polite">
+      <div class="hud-card health-card">
+        <div class="hud-label">VITALS <span id="healthValue">100</span></div>
+        <div class="meter"><div id="healthFill" class="meter-fill health-fill"></div></div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">ELIMINATIONS</div>
+        <div class="hud-value" id="killsValue">00</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">SURVIVORS</div>
+        <div class="hud-value" id="aliveValue">15</div>
+      </div>
+      <div class="hud-card zone-card">
+        <div class="hud-label">SAFE ZONE</div>
+        <div class="hud-value zone-value" id="zoneValue">WAITING</div>
+      </div>
+    </section>
+
+    <div class="crosshair-hint" id="crosshairHint">AIM WITH MOUSE</div>
+
+    <section class="bottom-hud">
+      <div class="weapon-panel">
+        <div class="weapon-icon">✦</div>
+        <div class="weapon-copy">
+          <div class="weapon-name">RANGER · MK I</div>
+          <div class="weapon-type">ASSAULT RIFLE</div>
+        </div>
+        <div class="ammo">
+          <strong id="ammoValue">28</strong><span>/ <i id="reserveValue">84</i></span>
+        </div>
+      </div>
+      <div class="action-panel">
+        <button id="reloadBtn" class="action-btn secondary" type="button">RELOAD <kbd>R</kbd></button>
+        <button id="medkitBtn" class="action-btn secondary" type="button">MEDKIT <span id="medkitCount">1</span></button>
+      </div>
+    </section>
+
+    <div class="mobile-controls">
+      <div class="stick-area">
+        <div id="joystick" class="joystick"><div id="stickKnob" class="stick-knob"></div></div>
+        <span>MOVE</span>
+      </div>
+      <button id="fireBtn" class="fire-btn" type="button">FIRE</button>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <section class="overlay" id="startOverlay">
+      <div class="modal-card">
+        <div class="eyebrow"><span></span> OPERATION: LAST CIRCLE</div>
+        <h1>ENTER THE<br><em>ARENA.</em></h1>
+        <p class="modal-copy">Drop into the wild. Collect supplies, outlast rival fighters, and stay inside the shrinking safe zone.</p>
+        <div class="briefing">
+          <div><span>01</span><strong>SCAVENGE</strong><small>Find ammo & medkits</small></div>
+          <div><span>02</span><strong>SURVIVE</strong><small>Watch the safe zone</small></div>
+          <div><span>03</span><strong>DOMINATE</strong><small>Be the last standing</small></div>
+        </div>
+        <button id="startBtn" class="primary-btn" type="button">DEPLOY NOW <span>↗</span></button>
+        <div class="controls-note">WASD / ARROWS TO MOVE <b>·</b> MOUSE TO AIM & FIRE <b>·</b> R TO RELOAD</div>
+        <div class="independent-note">Independent browser prototype · Not affiliated with the official game</div>
+      </div>
+    </section>
+
+    <section class="overlay hidden" id="endOverlay">
+      <div class="modal-card result-card">
+        <div class="eyebrow" id="resultEyebrow">MATCH COMPLETE</div>
+        <h2 id="resultTitle">ELIMINATED</h2>
+        <p class="modal-copy" id="resultCopy">The arena has claimed another fighter.</p>
+        <div class="result-stats">
+          <div><strong id="finalKills">0</strong><span>ELIMINATIONS</span></div>
+          <div><strong id="finalTime">00:00</strong><span>SURVIVAL TIME</span></div>
+        </div>
+        <button id="restartBtn" class="primary-btn" type="button">PLAY AGAIN <span>↗</span></button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
