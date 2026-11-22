@@ -1,6 +1,6 @@
 # Free Fire — Survival Arena Prototype
 
-An original, lightweight browser-based top-down survival shooter prototype. This is an independent learning/game-development project and is not affiliated with Garena or the official Free Fire game. It uses original canvas-drawn visuals and no copied game assets.
+An original browser-based third-person 3D survival shooter prototype rendered with Three.js. This is an independent learning/game-development project and is not affiliated with Garena or the official Free Fire game. It uses original canvas-drawn visuals and no copied game assets.
 
 ## Live deployment
 
@@ -32,7 +32,7 @@ Open `index.html` in a modern browser. No build tools or package install are req
 
 - `index.html` — game entry point and HUD
 - `styles.css` — responsive visual design
-- `game.js` — rendering, input, AI, combat, pickups, and safe-zone logic
+- `game.js` — input, AI, combat, pickups, and safe-zone logic\n- `render3d.js` — 3D island, third-person camera, aircraft, parachutes, and humanoid character rendering
 - `favicon.svg` — browser icon
 - `manifest.webmanifest` — installable web-app metadata
 - `sw.js` — offline shell cache
@@ -48,4 +48,4 @@ Open `index.html` in a modern browser. No build tools or package install are req
 3. Add more maps, weapons, inventory, and settings.
 4. Explore multiplayer architecture only after the single-player foundation is stable.
 
-The current build is a 2D prototype, not a 3D or online multiplayer recreation.
+The current build is a single-player 3D prototype. It does not yet include online multiplayer, imported high-detail character assets, or a full animation rig.
