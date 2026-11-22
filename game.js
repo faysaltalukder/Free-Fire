@@ -21,6 +21,7 @@
   let state = "menu", lastTime = 0, elapsed = 0, toastTimer = 0;
   let camera = { x: 0, y: 0 };
   let player, bots, bullets, pickups, obstacles, particles, safeZone, keys, mouse, joystick;
+  let dropActors = [], dropElapsed = 0, plane = null;
   let lastHud = 0;
 
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -69,17 +70,14 @@
 
   function startGame() {
     elapsed = 0;
-    player = newFighter(WORLD.width / 2, WORLD.height / 2, true);
+    player = newFighter(WORLD.width * .28, WORLD.height * .52, true);
     player.ammo = 28; player.reserve = 84; player.medkits = 1; player.kills = 0;
     player.reloading = 0; player.shotCooldown = 0;
     bots = [];
     for (let i = 0; i < CONFIG.botCount; i++) {
-      const a = (Math.PI * 2 * i / CONFIG.botCount) + random(-.25, .25);
-      const r = random(320, 690);
-      bots.push(newFighter(
-        clamp(player.x + Math.cos(a) * r, 70, WORLD.width - 70),
-        clamp(player.y + Math.sin(a) * r, 70, WORLD.height - 70), false, i
-      ));
+      const x = clamp(WORLD.width * (.20 + i * .043) + random(-75, 75), 80, WORLD.width - 80);
+      const y = clamp(WORLD.height * .5 + random(-520, 520), 80, WORLD.height - 80);
+      bots.push(newFighter(x, y, false, i));
     }
     bullets = [];
     particles = [];
@@ -95,13 +93,20 @@
     keys = {};
     mouse = { x: view.width / 2 + 100, y: view.height / 2, down: false, active: false };
     joystick = { active: false, x: 0, y: 0, pointerId: null };
-    camera.x = clamp(player.x - view.width / 2, 0, WORLD.width - view.width);
-    camera.y = clamp(player.y - view.height / 2, 0, WORLD.height - view.height);
-    state = "running";
+    dropActors = [{ fighter: player, startX: player.x, startY: 360, landingX: player.x, landingY: player.y, delay: 1.55, progress: 0 }];
+    bots.forEach((bot, i) => dropActors.push({
+      fighter: bot, startX: bot.x, startY: 360, landingX: bot.x, landingY: bot.y,
+      delay: 1.85 + i * .34, progress: 0
+    }));
+    dropElapsed = 0;
+    plane = { x: -180, y: 350, speed: 330, heading: 1 };
+    camera.x = clamp(WORLD.width / 2 - view.width / 2, 0, WORLD.width - view.width);
+    camera.y = clamp(WORLD.height / 2 - view.height / 2, 0, WORLD.height - view.height);
+    state = "dropping";
     ui.start.classList.add("hidden");
     ui.end.classList.add("hidden");
-    ui.status.textContent = "OPERATIVE IN ZONE";
-    toast("SURVIVE. THE ZONE IS MOVING.");
+    ui.status.textContent = "AIRBORNE · PREPARE TO JUMP";
+    toast("TRANSPORT PLANE APPROACHING");
     updateHud(true);
     lastTime = performance.now();
     requestAnimationFrame(loop);
@@ -112,6 +117,90 @@
     ui.toast.classList.add("show");
     toastTimer = 1.8;
   }
+
+  function updateDrop(dt) {
+    dropElapsed += dt;
+    plane.x += plane.speed * dt;
+    let landed = 0;
+    for (const actor of dropActors) {
+      if (dropElapsed < actor.delay) continue;
+      actor.progress = clamp((dropElapsed - actor.delay) / 4.1, 0, 1);
+      if (actor.progress >= 1) landed++;
+    }
+    if (dropElapsed > 7.4 && landed === dropActors.length) {
+      state = "running";
+      camera.x = clamp(player.x - view.width / 2, 0, WORLD.width - view.width);
+      camera.y = clamp(player.y - view.height / 2, 0, WORLD.height - view.height);
+      ui.status.textContent = "OPERATIVE IN ZONE";
+      toast("TOUCHDOWN · SURVIVE THE ARENA");
+      lastTime = performance.now();
+      return;
+    }
+    updateDropCamera();
+  }
+
+  function updateDropCamera() {
+    camera.x = clamp(WORLD.width / 2 - view.width / 2, 0, WORLD.width - view.width);
+    camera.y = clamp(WORLD.height / 2 - view.height / 2, 0, WORLD.height - view.height);
+  }
+
+  function drawPlane() {
+    if (!plane) return;
+    ctx.save();
+    ctx.translate(plane.x, plane.y);
+    ctx.rotate(0);
+    ctx.fillStyle = "rgba(5,12,8,.25)";
+    ctx.beginPath(); ctx.ellipse(0, 8, 58, 17, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#d9dfd1";
+    ctx.beginPath();
+    ctx.moveTo(62, 0); ctx.lineTo(20, -8); ctx.lineTo(5, -35); ctx.lineTo(-5, -35);
+    ctx.lineTo(-1, -8); ctx.lineTo(-42, -13); ctx.lineTo(-54, -23); ctx.lineTo(-61, -22);
+    ctx.lineTo(-52, 0); ctx.lineTo(-61, 22); ctx.lineTo(-54, 23); ctx.lineTo(-42, 13);
+    ctx.lineTo(-1, 8); ctx.lineTo(-5, 35); ctx.lineTo(5, 35); ctx.lineTo(20, 8);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#d5f36b"; ctx.fillRect(-12, -4, 28, 8);
+    ctx.restore();
+  }
+
+  function drawParachute(actor) {
+    if (actor.progress >= 1) return;
+    const p = actor.progress;
+    const x = actor.startX + (actor.landingX - actor.startX) * p;
+    const y = actor.startY + (actor.landingY - actor.startY) * p;
+    const lift = Math.sin(p * Math.PI) * 22;
+    const canopy = 18 * (1 - p * .25);
+    ctx.save();
+    ctx.globalAlpha = .22 + p * .78;
+    ctx.fillStyle = "rgba(5,12,8,.35)";
+    ctx.beginPath(); ctx.ellipse(actor.landingX, actor.landingY + 7, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#e9eee2"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, y + lift); ctx.lineTo(x - canopy, y + lift + 17); ctx.moveTo(x, y + lift); ctx.lineTo(x + canopy, y + lift + 17); ctx.stroke();
+    ctx.fillStyle = actor.fighter.isPlayer ? "#d5f36b" : actor.fighter.color;
+    ctx.beginPath(); ctx.arc(x, y + lift, canopy, Math.PI, 0); ctx.quadraticCurveTo(x, y + lift + 10, x - canopy, y + lift); ctx.fill();
+    ctx.fillStyle = "#17251a";
+    ctx.beginPath(); ctx.arc(x, y + lift + 21, 4, 0, Math.PI * 2); ctx.fill();
+    if (actor.fighter.isPlayer) {
+      ctx.fillStyle = "#f4f7e9"; ctx.font = "bold 10px system-ui"; ctx.textAlign = "center";
+      ctx.fillText("YOU", x, y + lift + 38);
+    }
+    ctx.restore();
+  }
+
+  function drawDropOverlay() {
+    const seconds = Math.max(0, 8 - dropElapsed);
+    ctx.save();
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    ctx.fillStyle = "rgba(7,15,11,.72)";
+    ctx.fillRect(0, 76, view.width, 42);
+    ctx.fillStyle = "#d5f36b";
+    ctx.font = "900 11px system-ui"; ctx.textAlign = "center";
+    ctx.fillText("TRANSPORT FLIGHT  ·  " + (dropElapsed < 1.5 ? "APPROACHING DROP ZONE" : "PARACHUTES DEPLOYED"), view.width / 2, 94);
+    ctx.fillStyle = "#eef2e8"; ctx.font = "800 18px system-ui";
+    ctx.fillText(dropElapsed < 1.5 ? "GET READY TO JUMP" : "LANDING IN " + Math.ceil(seconds) + "s", view.width / 2, 108);
+    ctx.restore();
+  }
+
+
 
   function worldPointer(event) {
     const rect = canvas.getBoundingClientRect();
@@ -410,14 +499,21 @@
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
     drawGround();
-    drawZone();
-    drawPickups();
-    drawObstacles();
-    drawBullets();
-    drawFighters();
-    drawParticles();
+    if (state === "dropping") {
+      drawObstacles();
+      drawPlane();
+      for (const actor of dropActors) drawParachute(actor);
+    } else {
+      drawZone();
+      drawPickups();
+      drawObstacles();
+      drawBullets();
+      drawFighters();
+      drawParticles();
+    }
     ctx.restore();
     if (state === "running") drawMiniCompass();
+    if (state === "dropping") drawDropOverlay();
   }
 
   function drawGround() {
@@ -534,12 +630,13 @@
   }
 
   function loop(now) {
-    if (state !== "running") { draw(); return; }
+    if (state !== "running" && state !== "dropping") { draw(); return; }
     const dt = Math.min((now - lastTime) / 1000, .04);
     lastTime = now;
-    update(dt);
+    if (state === "dropping") updateDrop(dt);
+    else update(dt);
     draw();
-    if (state === "running") requestAnimationFrame(loop);
+    if (state === "running" || state === "dropping") requestAnimationFrame(loop);
   }
 
   // Optional offline shell caching for the deployed GitHub Pages app.
