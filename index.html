@@ -14,18 +14,18 @@
   <meta property="og:description" content="An original browser-based battle royale survival shooter prototype.">
   <title>Free Fire — Survival Arena Prototype</title>
   <link rel="stylesheet" href="./styles.css">
-  <script src="game.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>\n  <script src="./render3d.js" defer></script>\n  <script src="game.js" defer></script>
 </head>
 <body>
   <main class="game-shell">
-    <canvas id="gameCanvas" aria-label="Battle royale game arena"></canvas>
+    <canvas id="game3dCanvas" aria-label="3D battle royale island"></canvas>\n    <canvas id="gameCanvas" aria-hidden="true"></canvas>
 
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">FF</div>
         <div>
           <div class="brand-name">FREE FIRE <span>LAB</span></div>
-          <div class="brand-sub">SURVIVAL ARENA · PROTOTYPE</div>
+          <div class="brand-sub">3D SURVIVAL ARENA · PROTOTYPE</div>
         </div>
       </div>
       <div class="top-status">
