@@ -103,7 +103,7 @@
       });
     });
     dropElapsed = 0;
-    plane = { x: -180, y: 350, speed: 270, heading: 1 };
+    plane = { x: 700, y: 350, speed: 270, heading: 1 };
     camera.x = clamp(WORLD.width / 2 - view.width / 2, 0, WORLD.width - view.width);
     camera.y = clamp(WORLD.height / 2 - view.height / 2, 0, WORLD.height - view.height);
     state = "dropping";
@@ -111,7 +111,7 @@
     ui.end.classList.add("hidden");
     ui.jumpBtn.classList.remove("hidden");
     ui.status.textContent = "AIRBORNE · PREPARE TO JUMP";
-    toast("TRANSPORT PLANE APPROACHING");
+    toast("TRANSPORT AIRCRAFT IN FLIGHT · JUMP WHEN READY");
     updateHud(true);
     lastTime = performance.now();
     requestAnimationFrame(loop);
@@ -128,16 +128,17 @@
     const actor = dropActors.find((item) => item.fighter.isPlayer);
     if (!actor || actor.jumped) return;
     actor.jumped = true;
-    actor.startX = plane.x;
-    actor.startY = plane.y;
-    // Jump timing selects a nearby landing sector on the visible island map.
-    actor.landingX = clamp(plane.x + random(-260, 260), 90, WORLD.width - 90);
-    actor.landingY = random(520, WORLD.height - 100);
+    // Step out of the aircraft's open side door, then steer toward a nearby island sector.
+    actor.startX = plane.x - 18;
+    actor.startY = plane.y + 20;
+    actor.landingX = clamp(plane.x + random(-110, 190), 90, WORLD.width - 90);
+    actor.landingY = clamp(plane.y + random(-250, 250), 90, WORLD.height - 90);
     actor.fighter.x = actor.landingX;
     actor.fighter.y = actor.landingY;
+    actor.progress = 0;
     actor.jumpAt = dropElapsed;
     ui.jumpBtn.classList.add("hidden");
-    toast("JUMP CONFIRMED · PARACHUTE DEPLOYED");
+    ui.status.textContent = "PLAYER AIRBORNE · PARACHUTE OPEN";\n    toast("JUMP CONFIRMED · PARACHUTE DEPLOYED");
   }
 
   function updateDrop(dt) {
@@ -147,12 +148,16 @@
       if (actor.fighter.isPlayer && !actor.jumped) continue;
       if (!actor.jumped && dropElapsed >= actor.delay) {
         actor.jumped = true;
-        actor.startX = plane.x;
-        actor.startY = plane.y;
+        actor.startX = plane.x - 18;
+        actor.startY = plane.y + 20;
+        actor.landingX = clamp(plane.x + random(-150, 170), 90, WORLD.width - 90);
+        actor.landingY = clamp(plane.y + random(-260, 260), 90, WORLD.height - 90);
+        actor.fighter.x = actor.landingX;
+        actor.fighter.y = actor.landingY;
         actor.jumpAt = dropElapsed;
       }
       if (!actor.jumped) continue;
-      actor.progress = clamp((dropElapsed - actor.jumpAt) / 4.1, 0, 1);
+      actor.progress = clamp((dropElapsed - actor.jumpAt) / 4.8, 0, 1);
     }
     const landed = dropActors.every((actor) => actor.jumped && actor.progress >= 1);
     if (landed) {
