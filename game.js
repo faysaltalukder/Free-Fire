@@ -122,18 +122,31 @@
     if (event.pointerType === "mouse") {
       const p = worldPointer(event);
       mouse.x = p.x; mouse.y = p.y; mouse.active = true;
-    } else if (fireTouch.active) {
+    } else if (fireTouch.active && fireTouch.pointerId === event.pointerId) {
       const p = worldPointer(event);
       player && (player.angle = angleTo(player, p));
     }
   });
   canvas.addEventListener("pointerdown", (event) => {
-    if (state !== "running" || event.pointerType !== "mouse") return;
-    mouse.down = true;
-    canvas.setPointerCapture?.(event.pointerId);
+    if (state !== "running") return;
+    if (event.pointerType === "mouse") {
+      mouse.down = true;
+      canvas.setPointerCapture?.(event.pointerId);
+    } else if (event.clientX > view.width * .42) {
+      // Touch and drag on the right side of the arena to aim and fire.
+      fireTouch.active = true;
+      fireTouch.pointerId = event.pointerId;
+      canvas.setPointerCapture?.(event.pointerId);
+      const p = worldPointer(event);
+      player && (player.angle = angleTo(player, p));
+    }
   });
   addEventListener("pointerup", (event) => {
     if (event.pointerType === "mouse") mouse.down = false;
+    if (fireTouch.pointerId === event.pointerId) {
+      fireTouch.active = false;
+      fireTouch.pointerId = null;
+    }
   });
 
   const fireTouch = { active: false, pointerId: null };
@@ -259,6 +272,7 @@
     const ml = Math.hypot(mx, my);
     if (ml > 1) { mx /= ml; my /= ml; }
     if (ml > .05) moveFighter(player, mx * player.speed * dt, my * player.speed * dt);
+    if (isTouchDevice() && !fireTouch.active && ml > .15) player.angle = Math.atan2(my, mx);
 
     if (mouse.active && !isTouchDevice()) player.angle = angleTo(player, { x: mouse.x, y: mouse.y });
     if (mouse.down || fireTouch.active) playerShoot();
