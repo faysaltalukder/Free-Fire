@@ -12,7 +12,8 @@
     restartBtn: $("restartBtn"), reloadBtn: $("reloadBtn"), medkitBtn: $("medkitBtn"),
     fireBtn: $("fireBtn"), joystick: $("joystick"), knob: $("stickKnob"),
     toast: $("toast"), resultTitle: $("resultTitle"), resultCopy: $("resultCopy"),
-    resultEyebrow: $("resultEyebrow"), finalKills: $("finalKills"), finalTime: $("finalTime")
+    resultEyebrow: $("resultEyebrow"), finalKills: $("finalKills"), finalTime: $("finalTime"),
+    jumpBtn: $("jumpBtn")
   };
 
   const WORLD = { width: 2200, height: 1600 };
@@ -93,21 +94,22 @@
     keys = {};
     mouse = { x: view.width / 2 + 100, y: view.height / 2, down: false, active: false };
     joystick = { active: false, x: 0, y: 0, pointerId: null };
-    dropActors = [{ fighter: player, startX: clamp(-180 + 330 * 1.55, 70, WORLD.width - 70), startY: 350, landingX: player.x, landingY: player.y, delay: 1.55, progress: 0 }];
+    dropActors = [{ fighter: player, startX: 0, startY: 350, landingX: player.x, landingY: player.y, delay: 0, progress: 0, jumped: false }];
     bots.forEach((bot, i) => {
-      const delay = 1.85 + i * .28;
+      const delay = 1.25 + i * .31;
       dropActors.push({
-        fighter: bot, startX: clamp(-180 + 330 * delay, 70, WORLD.width - 70),
-        startY: 350, landingX: bot.x, landingY: bot.y, delay, progress: 0
+        fighter: bot, startX: 0, startY: 350,
+        landingX: bot.x, landingY: bot.y, delay, progress: 0, jumped: false
       });
     });
     dropElapsed = 0;
-    plane = { x: -180, y: 350, speed: 330, heading: 1 };
+    plane = { x: -180, y: 350, speed: 270, heading: 1 };
     camera.x = clamp(WORLD.width / 2 - view.width / 2, 0, WORLD.width - view.width);
     camera.y = clamp(WORLD.height / 2 - view.height / 2, 0, WORLD.height - view.height);
     state = "dropping";
     ui.start.classList.add("hidden");
     ui.end.classList.add("hidden");
+    ui.jumpBtn.classList.remove("hidden");
     ui.status.textContent = "AIRBORNE · PREPARE TO JUMP";
     toast("TRANSPORT PLANE APPROACHING");
     updateHud(true);
@@ -121,17 +123,36 @@
     toastTimer = 1.8;
   }
 
+  function jumpPlayer() {
+    if (state !== "dropping") return;
+    const actor = dropActors.find((item) => item.fighter.isPlayer);
+    if (!actor || actor.jumped) return;
+    actor.jumped = true;
+    actor.startX = plane.x;
+    actor.startY = plane.y;
+    actor.jumpAt = dropElapsed;
+    ui.jumpBtn.classList.add("hidden");
+    toast("JUMP CONFIRMED · PARACHUTE DEPLOYED");
+  }
+
   function updateDrop(dt) {
     dropElapsed += dt;
-    plane.x += plane.speed * dt;
-    let landed = 0;
+    plane.x = Math.min(WORLD.width - 105, plane.x + plane.speed * dt);
     for (const actor of dropActors) {
-      if (dropElapsed < actor.delay) continue;
-      actor.progress = clamp((dropElapsed - actor.delay) / 4.1, 0, 1);
-      if (actor.progress >= 1) landed++;
+      if (actor.fighter.isPlayer && !actor.jumped) continue;
+      if (!actor.jumped && dropElapsed >= actor.delay) {
+        actor.jumped = true;
+        actor.startX = plane.x;
+        actor.startY = plane.y;
+        actor.jumpAt = dropElapsed;
+      }
+      if (!actor.jumped) continue;
+      actor.progress = clamp((dropElapsed - actor.jumpAt) / 4.1, 0, 1);
     }
-    if (dropElapsed > 7.4 && landed === dropActors.length) {
+    const landed = dropActors.every((actor) => actor.jumped && actor.progress >= 1);
+    if (landed) {
       state = "running";
+      ui.jumpBtn.classList.add("hidden");
       camera.x = clamp(player.x - view.width / 2, 0, WORLD.width - view.width);
       camera.y = clamp(player.y - view.height / 2, 0, WORLD.height - view.height);
       ui.status.textContent = "OPERATIVE IN ZONE";
@@ -166,7 +187,7 @@
   }
 
   function drawParachute(actor) {
-    if (actor.progress >= 1) return;
+    if (!actor.jumped || actor.progress >= 1) return;
     const p = actor.progress;
     const x = actor.startX + (actor.landingX - actor.startX) * p;
     const y = actor.startY + (actor.landingY - actor.startY) * p;
@@ -190,16 +211,17 @@
   }
 
   function drawDropOverlay() {
-    const seconds = Math.max(0, 8 - dropElapsed);
+    const playerActor = dropActors.find((actor) => actor.fighter.isPlayer);
+    const seconds = playerActor && playerActor.jumped ? Math.max(0, 5 - (dropElapsed - playerActor.jumpAt)) : 0;
     ctx.save();
     ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
     ctx.fillStyle = "rgba(7,15,11,.72)";
     ctx.fillRect(0, 76, view.width, 42);
     ctx.fillStyle = "#d5f36b";
     ctx.font = "900 11px system-ui"; ctx.textAlign = "center";
-    ctx.fillText("TRANSPORT FLIGHT  ·  " + (dropElapsed < 1.5 ? "APPROACHING DROP ZONE" : "PARACHUTES DEPLOYED"), view.width / 2, 94);
+    ctx.fillText("TRANSPORT FLIGHT  ·  " + (playerActor && playerActor.jumped ? "PLAYER AIRBORNE" : "CHOOSE YOUR DROP POINT"), view.width / 2, 94);
     ctx.fillStyle = "#eef2e8"; ctx.font = "800 18px system-ui";
-    ctx.fillText(dropElapsed < 1.5 ? "GET READY TO JUMP" : "LANDING IN " + Math.ceil(seconds) + "s", view.width / 2, 108);
+    ctx.fillText(playerActor && playerActor.jumped ? "LANDING IN " + Math.ceil(seconds) + "s" : "PRESS SPACE OR TAP JUMP", view.width / 2, 108);
     ctx.restore();
   }
 
@@ -285,11 +307,13 @@
     const key = event.key.toLowerCase();
     keys[key] = true;
     if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) event.preventDefault();
+    if (key === " " && state === "dropping") jumpPlayer();
     if (key === "r" && state === "running") reload();
     if (key === "f" && state === "running") useMedkit();
   });
   addEventListener("keyup", (event) => { keys[event.key.toLowerCase()] = false; });
 
+  ui.jumpBtn.addEventListener("click", jumpPlayer);
   ui.startBtn.addEventListener("click", startGame);
   ui.restartBtn.addEventListener("click", startGame);
   ui.reloadBtn.addEventListener("click", reload);
