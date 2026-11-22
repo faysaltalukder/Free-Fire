@@ -1,9 +1,9 @@
-const CACHE_NAME = "free-fire-arena-shell-v2";
+const CACHE_NAME = "free-fire-arena-shell-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
-  "./game.js",
+  "./game.js",\n  "./render3d.js",
   "./favicon.svg",
   "./manifest.webmanifest"
 ];
