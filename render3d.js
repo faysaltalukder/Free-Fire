@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const THREE = window.THREE;
-  if (!THREE) { console.error("Three.js failed to load; keeping the 2D fallback."); return; }
+  if (!THREE) { console.error("Three.js failed to load; keeping the 2D fallback."); const fallback=document.getElementById("gameCanvas"); if(fallback) fallback.style.opacity="1"; return; }
   const canvas = document.getElementById("game3dCanvas");
   let renderer, scene, camera, terrain, planeGroup, zoneRing;
   const fighterMeshes = new Map(), obstacleMeshes = new Map(), pickupMeshes = new Map(), bulletMeshes = new Map();
@@ -38,7 +38,7 @@
       buildPlane();
       window.addEventListener("resize", resize);
       return true;
-    } catch (e) { console.error("3D renderer initialization failed:",e); canvas.style.display="none"; return false; }
+    } catch (e) { console.error("3D renderer initialization failed:",e); canvas.style.display="none"; const fallback=document.getElementById("gameCanvas"); if(fallback) fallback.style.opacity="1"; return false; }
   }
   function resize() {
     if (!renderer) return;
@@ -209,7 +209,7 @@
     } else {
       const behind=18;
       const desired=new THREE.Vector3(player.x-Math.cos(player.angle)*behind,13,player.y-Math.sin(player.angle)*behind);
-      camera.position.lerp(desired,.16);
+      camera.position.copy(desired);
       camera.lookAt(player.x,8,player.y);
     }
     renderer.render(scene,camera);
