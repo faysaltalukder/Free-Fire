@@ -13,7 +13,8 @@ html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background:
 body { color: var(--ink); }
 button { font: inherit; }
 .game-shell { position: relative; width: 100%; height: 100%; min-height: 420px; overflow: hidden; background: #263d31; isolation: isolate; }
-#game3dCanvas { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }\n#gameCanvas { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; touch-action: none; }
+#game3dCanvas { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#gameCanvas { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; touch-action: none; }
 .topbar { position: absolute; z-index: 3; top: 0; left: 0; right: 0; height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; background: linear-gradient(180deg, rgba(8,15,12,.88), rgba(8,15,12,0)); pointer-events: none; }
 .brand { display: flex; align-items: center; gap: 11px; }
 .brand-mark { width: 37px; height: 37px; display: grid; place-items: center; color: #142016; background: var(--lime); font-weight: 1000; font-size: 13px; letter-spacing: -1px; transform: skew(-8deg); }
