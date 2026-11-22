@@ -250,7 +250,7 @@
   canvas.addEventListener("pointermove", (event) => {
     if (event.pointerType === "mouse") {
       const p = worldPointer(event);
-      mouse.x = p.x; mouse.y = p.y; mouse.active = true;
+      mouse.x = p.x; mouse.y = p.y; mouse.screenX = event.clientX; mouse.screenY = event.clientY; mouse.active = true;
       if (mouse.moveTarget && (event.buttons & 2)) mouse.moveTarget = p;
     } else if (fireTouch.active && fireTouch.pointerId === event.pointerId) {
       const p = worldPointer(event);
@@ -351,11 +351,27 @@
     toast("RELOADING...");
   }
   function useMedkit() {
-    if (state !== "running" || player.medkits <= 0 || player.hp >= 92) return;
-    player.medkits--;
-    player.hp = Math.min(100, player.hp + 42);
-    burst(player.x, player.y, "#d5f36b", 12);
-    toast("MEDKIT USED · +42 HP");
+    if (state !== "running" || player.hp >= 100) return;
+    const restored = 100 - player.hp;
+    player.hp = 100;
+    burst(player.x, player.y, "#d5f36b", 18);
+    toast("UNLIMITED MEDKIT · +" + Math.ceil(restored) + " HP");
+    updateHud(true);
+  }
+
+  function placeGlooWall() {
+    if (state !== "running" || !player) return;
+    const angle = player.angle;
+    const x = clamp(player.x + Math.cos(angle) * 72, 55, WORLD.width - 55);
+    const y = clamp(player.y + Math.sin(angle) * 72, 55, WORLD.height - 55);
+    const wall = { x, y, w: 100, h: 12, type: "gloo", angle, life: 38 };
+    if (blocked(x, y, 24)) {
+      toast("GLOO WALL BLOCKED · MOVE TO OPEN GROUND");
+      return;
+    }
+    obstacles.push(wall);
+    burst(x, y, "#82d9ef", 16);
+    toast("GLOO WALL DEPLOYED · UNLIMITED");
     updateHud(true);
   }
 
@@ -401,6 +417,8 @@
 
   function update(dt) {
     elapsed += dt;
+    for (const wall of obstacles) if (wall.type === "gloo") wall.life -= dt;
+    obstacles = obstacles.filter((item) => item.type !== "gloo" || item.life > 0);
     if (toastTimer > 0 && (toastTimer -= dt) <= 0) ui.toast.classList.remove("show");
     if (player.reloading > 0) {
       player.reloading -= dt;
