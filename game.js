@@ -93,11 +93,14 @@
     keys = {};
     mouse = { x: view.width / 2 + 100, y: view.height / 2, down: false, active: false };
     joystick = { active: false, x: 0, y: 0, pointerId: null };
-    dropActors = [{ fighter: player, startX: player.x, startY: 360, landingX: player.x, landingY: player.y, delay: 1.55, progress: 0 }];
-    bots.forEach((bot, i) => dropActors.push({
-      fighter: bot, startX: bot.x, startY: 360, landingX: bot.x, landingY: bot.y,
-      delay: 1.85 + i * .34, progress: 0
-    }));
+    dropActors = [{ fighter: player, startX: clamp(-180 + 330 * 1.55, 70, WORLD.width - 70), startY: 350, landingX: player.x, landingY: player.y, delay: 1.55, progress: 0 }];
+    bots.forEach((bot, i) => {
+      const delay = 1.85 + i * .28;
+      dropActors.push({
+        fighter: bot, startX: clamp(-180 + 330 * delay, 70, WORLD.width - 70),
+        startY: 350, landingX: bot.x, landingY: bot.y, delay, progress: 0
+      });
+    });
     dropElapsed = 0;
     plane = { x: -180, y: 350, speed: 330, heading: 1 };
     camera.x = clamp(WORLD.width / 2 - view.width / 2, 0, WORLD.width - view.width);
