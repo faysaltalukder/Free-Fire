@@ -11,7 +11,7 @@
     grass: mat("#536e43"), grassLight: mat("#6c8650"), water: mat("#183e50",.38,.12),
     trunk: mat("#60442d"), leaf1: mat("#254b32"), leaf2: mat("#376843"),
     roof: mat("#6b5140"), wall: mat("#c1ae85"), crate: mat("#8b7955"),
-    player: mat("#c4e85b"), enemy: [mat("#c47a50"),mat("#a95f53"),mat("#718e83"),mat("#b39b68")],
+    player: mat("#c4e85b"), gloo: new THREE.MeshStandardMaterial({color:"#83d8ed",roughness:.28,metalness:.08,transparent:true,opacity:.82}), enemy: [mat("#c47a50"),mat("#a95f53"),mat("#718e83"),mat("#b39b68")],
     skin: mat("#c99470"), dark: mat("#26332e"), rifle: mat("#202824"), white: mat("#e5e9d9"),
     yellow: mat("#e7c15d"), med: mat("#d5f36b"), plane: mat("#d6ddd1"), canopy: mat("#d5f36b")
   };
@@ -145,7 +145,13 @@
     if(obstacleMeshes.has(key)) return obstacleMeshes.get(key);
     let mesh;
     if(o.type==="tree") mesh=buildTree(o.x,o.y,Math.max(.8,o.w/44));
-    else {
+    else if(o.type==="gloo") {
+      const g=new THREE.Group(); scene.add(g); g.position.set(o.x,0,o.y); g.rotation.y=-(o.angle||0);
+      addMesh(g,new THREE.BoxGeometry(o.w,35,o.h),materials.gloo,0,18,0);
+      addMesh(g,new THREE.BoxGeometry(o.w-8,3,o.h+1),mat("#c9f7ff",.3),0,35,0,false);
+      for(let x=-o.w/2+10;x<o.w/2;x+=20) addMesh(g,new THREE.BoxGeometry(2,30,2),mat("#d9f8ff",.3),x,18,0,false);
+      mesh=g;
+    } else {
       const g=new THREE.Group(); scene.add(g); g.position.set(o.x,0,o.y);
       addMesh(g,new THREE.BoxGeometry(o.w,18,o.h),materials.crate,0,9,0);
       addMesh(g,new THREE.BoxGeometry(o.w-8,2,o.h-8),mat("#b49d70"),0,18,0);
@@ -236,13 +242,26 @@
       camera.position.set(world.width/2,560,world.height/2+260);
       camera.lookAt(world.width/2,0,world.height/2);
     } else {
-      const behind=18;
-      const desired=new THREE.Vector3(player.x-Math.cos(player.angle)*behind,13,player.y-Math.sin(player.angle)*behind);
+      // Third-person shoulder camera: keep the complete avatar in frame with room to see the arena.
+      const behind=112, height=66;
+      const fx=Math.cos(player.angle), fz=Math.sin(player.angle);
+      const desired=new THREE.Vector3(player.x-fx*behind, height, player.y-fz*behind);
       camera.position.copy(desired);
-      camera.lookAt(player.x,8,player.y);
+      camera.lookAt(player.x+fx*24,22,player.y+fz*24);
     }
     renderer.render(scene,camera);
     return true;
   }
-  window.FreeFire3D={render};
+  function screenToWorld(clientX,clientY) {
+    if(!renderer||!camera) return null;
+    const rect=canvas.getBoundingClientRect();
+    const pointer=new THREE.Vector2(((clientX-rect.left)/rect.width)*2-1,-((clientY-rect.top)/rect.height)*2+1);
+    const raycaster=new THREE.Raycaster();
+    raycaster.setFromCamera(pointer,camera);
+    const ground=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+    const hit=new THREE.Vector3();
+    if(!raycaster.ray.intersectPlane(ground,hit)) return null;
+    return {x:hit.x,y:hit.z};
+  }
+  window.FreeFire3D={render,screenToWorld};
 })();
