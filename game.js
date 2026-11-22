@@ -130,6 +130,11 @@
     actor.jumped = true;
     actor.startX = plane.x;
     actor.startY = plane.y;
+    // Jump timing selects a nearby landing sector on the visible island map.
+    actor.landingX = clamp(plane.x + random(-260, 260), 90, WORLD.width - 90);
+    actor.landingY = random(520, WORLD.height - 100);
+    actor.fighter.x = actor.landingX;
+    actor.fighter.y = actor.landingY;
     actor.jumpAt = dropElapsed;
     ui.jumpBtn.classList.add("hidden");
     toast("JUMP CONFIRMED · PARACHUTE DEPLOYED");
