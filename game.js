@@ -138,7 +138,8 @@
     actor.progress = 0;
     actor.jumpAt = dropElapsed;
     ui.jumpBtn.classList.add("hidden");
-    ui.status.textContent = "PLAYER AIRBORNE · PARACHUTE OPEN";\n    toast("JUMP CONFIRMED · PARACHUTE DEPLOYED");
+    ui.status.textContent = "PLAYER AIRBORNE · PARACHUTE OPEN";
+    toast("JUMP CONFIRMED · PARACHUTE DEPLOYED");
   }
 
   function updateDrop(dt) {
