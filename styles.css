@@ -44,9 +44,9 @@ button { font: inherit; }
 .ammo strong { font-size: 24px; font-weight: 900; }
 .ammo span { color: #a8b4a8; font-size: 12px; }
 .ammo i { color: var(--lime); font-style: normal; }
-.action-panel { gap: 6px; padding: 6px; }
+.action-panel { gap: 6px; padding: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 390px; }
 .action-btn { min-height: 38px; padding: 0 13px; border: 1px solid rgba(255,255,255,.13); color: var(--ink); background: rgba(255,255,255,.06); font-size: 9px; font-weight: 900; letter-spacing: 1px; cursor: pointer; }
-.action-btn:hover { border-color: var(--lime); }
+.action-btn:hover { border-color: var(--lime); }\n.gloo-action { border-color: rgba(131,216,237,.38); }\n.gloo-action span { background: #83d8ed; }
 .action-btn span { display: inline-grid; min-width: 17px; height: 17px; margin-left: 5px; place-items: center; border-radius: 50%; color: #142016; background: var(--lime); }
 kbd { margin-left: 6px; color: var(--lime); font: inherit; }
 .overlay { position: absolute; z-index: 5; inset: 0; display: grid; place-items: center; padding: 22px; background: rgba(8,14,11,.63); backdrop-filter: blur(7px); }
@@ -102,7 +102,7 @@ kbd { margin-left: 6px; color: var(--lime); font: inherit; }
   .weapon-type { font-size: 6px; }
   .ammo strong { font-size: 19px; }
   .ammo span { font-size: 9px; }
-  .action-panel { flex-direction: column; align-items: stretch; width: 40%; padding: 5px; }
+  .action-panel { flex-direction: column; align-items: stretch; width: 42%; max-width: 170px; padding: 5px; }
   .action-btn { min-height: 29px; padding: 0 7px; font-size: 8px; }
   .mobile-controls { position: absolute; z-index: 3; inset: auto 0 92px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 22px; pointer-events: none; }
   .stick-area { display: flex; flex-direction: column; align-items: center; gap: 6px; color: rgba(238,242,232,.55); font-size: 7px; font-weight: 900; letter-spacing: 1px; pointer-events: auto; }
